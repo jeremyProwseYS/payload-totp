@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url'
 import { users } from './collections/users.js'
 import { posts } from './collections/posts.js'
 import { authors } from './collections/authors.js'
+import { pages } from './collections/pages.js'
 import { settings } from './globals/settings.js'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -35,7 +36,7 @@ export default buildConfig({
 		api: process.env.API_ROUTE || '/api',
 	},
 	serverURL: process.env.SERVER_URL || '',
-	collections: [users, authors, posts],
+	collections: [users, authors, posts, pages],
 	globals: [settings],
 	db: mongooseAdapter({
 		url: process.env.DATABASE_URI || '',
