@@ -11,6 +11,7 @@ import { setHasTotp } from './hooks/setHasTotp.js'
 import { i18n } from './i18n/index.js'
 import { strategy } from './strategy.js'
 import { totpAccess } from './totpAccess.js'
+import { withStrategyName } from './utilities/withStrategyName.js'
 
 const payloadTotp =
 	(pluginOptions: PayloadTOTPConfig) =>
@@ -179,7 +180,7 @@ const payloadTotp =
 								strategies: [
 									strategy,
 									...(typeof collection.auth === 'object'
-										? collection.auth?.strategies || []
+										? (collection.auth?.strategies || []).map(withStrategyName)
 										: []),
 								],
 							},
@@ -268,6 +269,17 @@ const payloadTotp =
 										? collection.access?.update
 										: totpAccess(collection.access?.update),
 							},
+							// Strategies are pooled across collections at init, so a custom
+							// strategy here can authenticate a user of the TOTP collection too.
+							...(typeof collection.auth === 'object' && collection.auth.strategies
+								? {
+										auth: {
+											...collection.auth,
+											strategies:
+												collection.auth.strategies.map(withStrategyName),
+										},
+									}
+								: {}),
 						}
 					}
 				}),
