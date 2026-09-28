@@ -8,6 +8,7 @@ import { verifyToken } from './api/verifyToken.js'
 import { deleteCookieAfterLogout } from './hooks/deleteCookieAfterLogout.js'
 import { refreshTotpCookieAfterRefresh } from './hooks/refreshTotpCookieAfterRefresh.js'
 import { setHasTotp } from './hooks/setHasTotp.js'
+import { setLocalStrategyBeforeLogin } from './hooks/setLocalStrategyBeforeLogin.js'
 import { i18n } from './i18n/index.js'
 import { strategy } from './strategy.js'
 import { totpAccess } from './totpAccess.js'
@@ -230,6 +231,10 @@ const payloadTotp =
 								afterRefresh: [
 									...(collection.hooks?.afterRefresh || []),
 									refreshTotpCookieAfterRefresh,
+								],
+								beforeLogin: [
+									...(collection.hooks?.beforeLogin || []),
+									setLocalStrategyBeforeLogin,
 								],
 							},
 						}

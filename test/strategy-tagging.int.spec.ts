@@ -10,6 +10,7 @@
 
 import type { AuthStrategy, Config } from 'payload'
 
+import { setLocalStrategyBeforeLogin } from '../src/hooks/setLocalStrategyBeforeLogin'
 import { payloadTotp } from '../src/index'
 import { strategy as totpStrategy } from '../src/strategy'
 import { withStrategyName } from '../src/utilities/withStrategyName'
@@ -181,5 +182,47 @@ describe('payloadTotp and custom strategies', () => {
 
 		expect(users.auth.strategies).toHaveLength(1)
 		expect(users.auth.strategies[0]).toBe(original)
+	})
+})
+
+const beforeLoginArgs = (user: Record<string, unknown>) =>
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	({ collection: {}, context: {}, req: {}, user }) as any
+
+/**
+ * Payload's reset-password operation logs the user in but, with `auth.useSessions` off,
+ * puts them on `req.user` without `_strategy` for the rest of that request.
+ */
+describe('setLocalStrategyBeforeLogin', () => {
+	test('tags an untagged user as a password login', () => {
+		expect(setLocalStrategyBeforeLogin(beforeLoginArgs({ id: 'user-1' }))).toEqual({
+			id: 'user-1',
+			_strategy: 'local-jwt',
+		})
+	})
+
+	test('keeps a strategy that is already set', () => {
+		const user = { id: 'user-1', _strategy: 'local-jwt' }
+
+		expect(setLocalStrategyBeforeLogin(beforeLoginArgs(user))).toBe(user)
+	})
+
+	test("runs after the TOTP collection's own beforeLogin hooks", () => {
+		const ownHook = jest.fn()
+		const config = buildConfig()
+		collectionBySlug(config, 'users').hooks = { beforeLogin: [ownHook] }
+
+		const users = collectionBySlug(payloadTotp({ collection: 'users' })(config), 'users')
+
+		expect(users.hooks.beforeLogin).toEqual([ownHook, setLocalStrategyBeforeLogin])
+	})
+
+	test('is not added when the plugin is disabled', () => {
+		const users = collectionBySlug(
+			payloadTotp({ collection: 'users', disabled: true })(buildConfig()),
+			'users',
+		)
+
+		expect(users.hooks?.beforeLogin ?? []).toHaveLength(0)
 	})
 })
