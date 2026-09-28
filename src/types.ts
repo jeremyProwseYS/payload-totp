@@ -5,6 +5,7 @@ export type PayloadTOTPConfig = {
 	collection: CollectionSlug
 	disableAccessWrapper?: boolean
 	disabled?: boolean
+	exemptStrategies?: string[]
 	forceSetup?: boolean
 	forceWhiteBackgroundOnQrCode?: boolean
 	totp?: Partial<Pick<TOTP, 'algorithm' | 'digits' | 'issuer' | 'period'>>
