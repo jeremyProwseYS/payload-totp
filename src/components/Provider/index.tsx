@@ -7,6 +7,10 @@ import { redirect } from 'next/navigation.js'
 import type { PayloadTOTPConfig, UserWithTotp } from '../../types.js'
 
 import { normalizePathname } from '../../utilities/normalizePathname.js'
+import {
+	isExemptStrategy,
+	requiresTotpVerification,
+} from '../../utilities/requiresTotpVerification.js'
 import TOTPProviderClient from './index.client.js'
 
 type Args = {
@@ -35,8 +39,7 @@ export const TOTPProvider = async (args: Args) => {
 
 	if (
 		user &&
-		user.hasTotp &&
-		!['api-key', 'totp'].includes(user._strategy ?? '') &&
+		requiresTotpVerification({ pluginOptions, user }) &&
 		normalizedPathname !== normalizedVerifyUrl
 	) {
 		redirect(`${payload.config.serverURL}${verifyUrl}?back=${encodeURIComponent(pathname)}`)
@@ -45,7 +48,7 @@ export const TOTPProvider = async (args: Args) => {
 		!user.hasTotp &&
 		pluginOptions.forceSetup &&
 		normalizedPathname !== normalizedSetupUrl &&
-		user._strategy !== 'api-key'
+		!isExemptStrategy({ pluginOptions, user })
 	) {
 		redirect(`${payload.config.serverURL}${setupUrl}?back=${encodeURIComponent(pathname)}`)
 	} else {
