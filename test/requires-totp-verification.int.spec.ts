@@ -11,6 +11,7 @@
 
 import type { PayloadTOTPConfig, UserWithTotp } from '../src/types'
 
+import { totpAccess } from '../src/totpAccess'
 import {
 	isExemptStrategy,
 	requiresTotpVerification,
@@ -64,5 +65,62 @@ describe('requiresTotpVerification', () => {
 		expect(requiresTotpVerification({ pluginOptions, user: buildUser(overrides) })).toBe(
 			expected,
 		)
+	})
+})
+
+function buildAccessArgs(user: UserWithTotp) {
+	return {
+		req: {
+			payload: { config: { custom: { totp: { pluginOptions } } } },
+			user,
+		},
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	} as any
+}
+
+// How Payload's schedulePublish task loads the scheduling user: `findByID` plus
+// `collection`, with no auth strategy involved.
+const scheduledPublishUser = buildUser({})
+
+describe('totpAccess', () => {
+	test('lets the scheduled-publish user through to the inner access function', async () => {
+		const inner = jest.fn(() => true)
+
+		await expect(totpAccess(inner)(buildAccessArgs(scheduledPublishUser))).resolves.toBe(true)
+		expect(inner).toHaveBeenCalledTimes(1)
+	})
+
+	test('returns what the inner access function decides for that user', async () => {
+		const where = { tenant: { equals: 'tenant-1' } }
+		const args = buildAccessArgs(scheduledPublishUser)
+
+		await expect(totpAccess(() => false)(args)).resolves.toBe(false)
+		await expect(totpAccess(() => where)(args)).resolves.toBe(where)
+	})
+
+	test('allows that user when there is no inner access function', async () => {
+		await expect(totpAccess()(buildAccessArgs(scheduledPublishUser))).resolves.toBe(true)
+	})
+
+	test('still denies an enrolled password login without asking the inner function', async () => {
+		const inner = jest.fn(() => true)
+		const args = buildAccessArgs(buildUser({ _strategy: 'local-jwt' }))
+
+		await expect(totpAccess(inner)(args)).resolves.toBe(false)
+		expect(inner).not.toHaveBeenCalled()
+	})
+
+	test('denies an enrolled custom-strategy login', async () => {
+		const args = buildAccessArgs(buildUser({ _strategy: 'sso' }))
+
+		await expect(totpAccess(() => true)(args)).resolves.toBe(false)
+	})
+
+	test('lets an exempt strategy through to the inner access function', async () => {
+		const inner = jest.fn(() => true)
+		const args = buildAccessArgs(buildUser({ _strategy: 'okta' }))
+
+		await expect(totpAccess(inner)(args)).resolves.toBe(true)
+		expect(inner).toHaveBeenCalledTimes(1)
 	})
 })
