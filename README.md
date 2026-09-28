@@ -109,6 +109,19 @@ By default, the plugin does not force users to configure TOTP. The TOTP verifica
 
 The `disableAccessWrapper` property disables the default access wrapper for all collections and globals. [Read more about it](#access-wrapper).
 
+### `exemptStrategies`
+
+Auth strategies whose logins skip TOTP, for example an SSO provider that already enforces its own second factor. Each entry is matched against the `_strategy` Payload sets on the user, which for a custom strategy is its `name`. API keys (`'api-key'`) are always exempt.
+
+```ts
+payloadTotp({
+	collection: 'users',
+	exemptStrategies: ['okta'],
+})
+```
+
+Users who log in through an exempt strategy aren't sent to the verify page, and `forceSetup` doesn't send them to the setup page.
+
 ### `totp`
 
 The `totp` property is used to configure the [TOTP class](https://hectorm.github.io/otpauth/classes/TOTP.html) from the `otpauth` package. You can customize the following options:
@@ -182,6 +195,17 @@ export const posts: CollectionConfig = {
 	},
 }
 ```
+
+## Which Requests Need TOTP
+
+TOTP protects logins. An enrolled user who logged in through an auth strategy, whether with a password or through a custom strategy, has to enter their code before the access wrapper lets the request through. API keys and [exempt strategies](#exemptstrategies) are the exceptions.
+
+Server code that loads a user itself and passes it to the Local API isn't a login, so there's no code to ask for, and your own access functions decide alone. Payload's scheduled publishing (`versions.drafts.schedulePublish`) depends on this: when the job runs, it publishes as the user who scheduled it, loaded straight from the database. Earlier versions of the plugin denied that user whenever they had TOTP set up, so the job failed with `Forbidden` and the document stayed in draft. Passing a request's own `req.user` to the Local API keeps its `_strategy`, so it's still checked.
+
+For this to hold, every login has to carry a `_strategy`. Payload's built-in strategies set one, and the plugin sets the strategy's `name` for custom strategies that don't. As a result:
+
+- Custom strategies added by plugins listed after `payloadTotp` aren't covered, which is one more reason to list it last.
+- A custom strategy can't be named `totp` or `api-key`. The plugin throws at startup if one is.
 
 ## Dashboard Walkthrough
 
