@@ -9,8 +9,9 @@ import { LOCAL_JWT_STRATEGY_NAME } from '../constants.js'
  *
  * Payload's login operation tags the user itself, but reset password -- which logs the
  * user in too -- only does so when the collection uses sessions. Otherwise the rest of
- * that request runs with an untagged `req.user`, which the plugin would read as "not a
- * login" and not hold to TOTP in the app's own `afterLogin` and `afterOperation` hooks.
+ * that request runs with an untagged `req.user`, which with `limitToLogin` on the plugin
+ * would read as "not a login" and not hold to TOTP in the app's own `afterLogin` and
+ * `afterOperation` hooks.
  * Both operations put the user this hook returns on `req.user`.
  */
 export const setLocalStrategyBeforeLogin: CollectionBeforeLoginHook<AuthenticatedUser> = ({

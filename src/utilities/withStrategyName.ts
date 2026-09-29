@@ -10,10 +10,11 @@ const RESERVED_STRATEGY_NAMES: string[] = [API_KEY_STRATEGY_NAME, TOTP_STRATEGY_
  * Wraps a custom auth strategy so every user it authenticates carries the strategy's
  * name in `_strategy`, as the users of Payload's built-in strategies do.
  *
- * Payload leaves `_strategy` to each strategy, and a custom one may omit it. The plugin
+ * Payload leaves `_strategy` to each strategy, and a custom one may omit it. The name is
+ * what the TOTP cookie records, so the TOTP strategy can delegate back to this one, and
+ * what `exemptStrategies` is matched against. With `limitToLogin` on, the plugin also
  * reads a missing `_strategy` as "not a login" (see `requiresTotpVerification`), so
- * without this such a login would skip TOTP. The name is also what the TOTP cookie
- * records, so the TOTP strategy can delegate back to this one.
+ * without this such a login would skip TOTP.
  */
 export function withStrategyName(strategy: AuthStrategy): AuthStrategy {
 	if (RESERVED_STRATEGY_NAMES.includes(strategy.name)) {

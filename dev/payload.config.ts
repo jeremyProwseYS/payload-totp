@@ -50,6 +50,7 @@ export default buildConfig({
 			disableAccessWrapper: process.env.DISABLE_ACCESS_WRAPPER === '1',
 			forceWhiteBackgroundOnQrCode:
 				process.env.FORCE_WHITE_BACKGROUND_ON_QR_CODE === '1',
+			limitToLogin: process.env.LIMIT_TO_LOGIN === '1',
 		}),
 	],
 	secret: process.env.PAYLOAD_SECRET || 'test-secret_key',

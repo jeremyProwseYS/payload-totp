@@ -8,7 +8,7 @@ test.describe('schedule publish', () => {
 	let baseURL: string
 
 	test.beforeAll(async ({ setup, browser, helpers }) => {
-		const setupResult = await setup({ forceSetup: true })
+		const setupResult = await setup({ forceSetup: true, limitToLogin: true })
 		teardown = setupResult.teardown
 		baseURL = setupResult.baseURL
 		const context = await browser.newContext()

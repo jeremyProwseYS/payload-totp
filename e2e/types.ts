@@ -3,6 +3,7 @@ export interface ISetupArgs {
 	disabled?: boolean
 	disableAccessWrapper?: boolean
 	forceWhiteBackgroundOnQrCode?: boolean
+	limitToLogin?: boolean
 	autoRefresh?: boolean
 	overrideBaseURL?: string
 	overridePort?: number

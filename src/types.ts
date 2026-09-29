@@ -8,6 +8,7 @@ export type PayloadTOTPConfig = {
 	exemptStrategies?: string[]
 	forceSetup?: boolean
 	forceWhiteBackgroundOnQrCode?: boolean
+	limitToLogin?: boolean
 	totp?: Partial<Pick<TOTP, 'algorithm' | 'digits' | 'issuer' | 'period'>>
 }
 

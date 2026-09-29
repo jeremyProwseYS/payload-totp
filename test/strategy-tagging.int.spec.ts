@@ -1,10 +1,10 @@
 /**
  * Custom auth strategies and `_strategy`.
  *
- * The plugin reads a user without `_strategy` as one that server code loaded itself,
- * not a login, and doesn't hold it to TOTP. Payload's own strategies set `_strategy`,
- * but a custom strategy may not, so the plugin tags those users with the strategy's
- * name. Tagging a strategy named `api-key` or `totp` would make its users pass as an
+ * The TOTP cookie and `exemptStrategies` identify a login by its `_strategy`, and with
+ * `limitToLogin` on, the plugin reads a user without one as loaded by server code, not a
+ * login, and doesn't hold it to TOTP. Payload's own strategies set `_strategy`, but a
+ * custom strategy may not, so the plugin tags those users with the strategy's name. Tagging a strategy named `api-key` or `totp` would make its users pass as an
  * API key or as already verified, so those names are refused at startup.
  */
 
